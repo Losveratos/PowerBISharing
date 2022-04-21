@@ -1,0 +1,27 @@
+let
+    Source = Excel.Workbook(File.Contents("C:\Users\mtenner\Desktop\Webinar IBCS\20220401_PBI_Tabular_DIM_Account_Only Accounts.xlsx"), null, true),
+    //Source wiht my Accounts
+    Account_Hierarchy_Sheet = Source{[Item="Account_Hierarchy",Kind="Sheet"]}[Data],
+    #"Promoted Headers" = Table.PromoteHeaders(Account_Hierarchy_Sheet, [PromoteAllScalars=true]),
+    //Basic Steps
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"CostType_ID", type text}, {"CostType_Order", Int64.Type}, {"AccountLevel_00", type text}, {"AccountLevel_01", type text}, {"AccountLevel_02", type text}, {"AccountLevel_03", type text}, {"AccountLevel_04", type text}, {"AccountLevel_05", type text}, {"AccountLevel_06", type any}, {"AccountLevel_07", type any}, {"AccountLevel_08", type any}, {"AccountLevel_09", type any}, {"AccountLevel_10", type any}, {"Value", Int64.Type}, {"Column15", type any}, {"Column16", type any}, {"Column17", type any}, {"Column18", type any}, {"Column19", type any}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Value"}),
+    //Remove unnessary Columns
+    #"Filtered Rows" = Table.SelectRows(#"Removed Columns", each ([CostType_ID] <> null)),
+    //Remove the empty rows
+    #"Demoted Headers" = Table.DemoteHeaders(#"Filtered Rows"),
+    // Demote Headers to remain the Account structure later
+    #"Changed Type1" = Table.TransformColumnTypes(#"Demoted Headers",{{"Column1", type text}, {"Column2", type any}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type text}, {"Column7", type text}, {"Column8", type text}, {"Column9", type text}, {"Column10", type text}, {"Column11", type text}, {"Column12", type text}, {"Column13", type text}, {"Column14", type text}, {"Column15", type text}, {"Column16", type text}, {"Column17", type text}, {"Column18", type text}}),
+    #"Transposed Table" = Table.Transpose(#"Changed Type1"),
+    //Transpose the table to use the fill down on the account sturcture in the next step
+    #"Filled Down" = Table.FillDown(#"Transposed Table",{"Column1", "Column2", "Column3", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12", "Column13", "Column14", "Column15", "Column16", "Column17", "Column18", "Column19", "Column20", "Column21", "Column22", "Column23", "Column24", "Column25", "Column26", "Column27", "Column28", "Column29", "Column30", "Column31", "Column32", "Column33", "Column34", "Column35", "Column36", "Column37", "Column38", "Column39", "Column40"}),
+    // Filldown all the columns in oder to get it in the right form for Zebra BI
+    #"Transposed Table1" = Table.Transpose(#"Filled Down"),
+    // Restore the initinal Layout of the table
+    #"Promoted Headers1" = Table.PromoteHeaders(#"Transposed Table1", [PromoteAllScalars=true]),
+    // Restore the initinal Headers 
+    #"Changed Type2" = Table.TransformColumnTypes(#"Promoted Headers1",{{"CostType_ID", type text}, {"CostType_Order", Int64.Type}, {"AccountLevel_00", type text}, {"AccountLevel_01", type text}, {"AccountLevel_02", type text}, {"AccountLevel_03", type text}, {"AccountLevel_04", type text}, {"AccountLevel_05", type text}, {"AccountLevel_06", type text}, {"AccountLevel_07", type text}, {"AccountLevel_08", type text}, {"AccountLevel_09", type text}, {"AccountLevel_10", type text}, {"Column15", type text}, {"Column16", type text}, {"Column17", type text}, {"Column18", type text}, {"Column19", type text}})
+in
+    #"Changed Type2"
+
+    // Have von withe the complete table ;-)
